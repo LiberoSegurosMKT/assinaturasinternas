@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gerador de Assinatura — Líbero Seguros</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --blue: #0055ff; --black: #111111; --gray: #555555;
+    --light: #f5f6fa; --border: #e2e5ef;
+    --radius: 12px; --radius-sm: 8px;
+  }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--light);
+    min-height: 100vh;
+    display: flex; flex-direction: column; align-items: center;
+    padding: 48px 20px;
+  }
+  header { text-align: center; margin-bottom: 40px; }
+  header img.logo { height: 36px; margin-bottom: 20px; display: block; margin-left: auto; margin-right: auto; }
+  header h1 { font-size: 22px; font-weight: 700; color: var(--black); letter-spacing: -0.3px; }
+  header p { font-size: 14px; color: var(--gray); margin-top: 6px; }
+  .card {
+    background: #fff; border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 32px;
+    width: 100%; max-width: 980px;
+    box-shadow: 0 2px 16px rgba(0,0,30,0.06);
+  }
+  .grid { display: grid; grid-template-columns: 1fr 1.3fr; gap: 40px; }
+  @media (max-width: 700px) {
+    .grid { grid-template-columns: 1fr; }
+    body { padding: 24px 16px; }
+    .card { padding: 20px; }
+  }
+  .section-label {
+    font-size: 11px; font-weight: 600; letter-spacing: 0.1em;
+    text-transform: uppercase; color: #aab0c6; margin-bottom: 20px;
+  }
+  .field { margin-bottom: 14px; }
+  .field label { display: block; font-size: 13px; font-weight: 500; color: var(--black); margin-bottom: 6px; }
+  .field input {
+    width: 100%; padding: 10px 14px; font-family: inherit;
+    font-size: 14px; color: var(--black); background: var(--light);
+    border: 1px solid var(--border); border-radius: var(--radius-sm);
+    outline: none; transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  .field input:focus {
+    border-color: var(--blue);
+    box-shadow: 0 0 0 3px rgba(0,85,255,0.1);
+    background: #fff;
+  }
+  .photo-row { display: flex; align-items: center; gap: 14px; }
+  #photo-thumb {
+    width: 72px; height: 120px; border-radius: 6px;
+    border: 2px dashed var(--border); background: var(--light);
+    flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+    overflow: hidden; cursor: pointer; transition: border-color 0.15s;
+  }
+  #photo-thumb:hover { border-color: var(--blue); }
+  #photo-thumb img { width: 100%; height: 100%; object-fit: cover; object-position: center top; display: block; }
+  .photo-btns { display: flex; flex-direction: column; gap: 6px; }
+  .btn-upload {
+    padding: 7px 14px; font-family: inherit; font-size: 12px; font-weight: 600;
+    color: var(--blue); background: rgba(0,85,255,0.07);
+    border: 1px solid rgba(0,85,255,0.2); border-radius: 6px;
+    cursor: pointer; white-space: nowrap; transition: background 0.15s;
+  }
+  .btn-upload:hover { background: rgba(0,85,255,0.13); }
+  .btn-remove {
+    padding: 5px 14px; font-family: inherit; font-size: 12px;
+    color: #999; background: transparent; border: 1px solid var(--border);
+    border-radius: 6px; cursor: pointer; display: none;
+    transition: color 0.15s, border-color 0.15s;
+  }
+  .btn-remove:hover { color: #cc0033; border-color: #cc0033; }
+  .btn-remove.show { display: block; }
+  .photo-hint { font-size: 11px; color: #aab0c6; line-height: 1.5; }
+  .preview-box {
+    background: var(--light); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); padding: 24px; margin-bottom: 16px;
+  }
+  #sig-wrap {
+    background: #fff; border-radius: 6px;
+    padding: 18px 22px; border: 1px solid var(--border);
+    display: inline-block;
+  }
+  .copy-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+  .copy-btn {
+    padding: 11px 8px; font-family: inherit;
+    font-size: 13px; font-weight: 600; color: #fff;
+    border: none; border-radius: var(--radius-sm);
+    cursor: pointer; transition: opacity 0.15s, transform 0.1s;
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+  }
+  .copy-btn:active { transform: scale(0.97); }
+  .copy-btn:hover { opacity: 0.88; }
+  .copy-btn.gmail { background: var(--blue); }
+  .copy-btn.outlook { background: #0078d4; }
+  .copy-btn.success { background: #1a7a4a !important; }
+  .hint {
+    font-size: 11px; color: #aab0c6; line-height: 1.7; text-align: center;
+    background: var(--light); border-radius: var(--radius-sm);
+    padding: 10px 12px; border: 1px solid var(--border);
+  }
+  .hint strong { color: #888; }
+  footer { margin-top: 32px; font-size: 12px; color: #aab0c6; }
+</style>
+</head>
+<body>
+
+<header>
+  <img class="logo" src="data:image/jpeg;base64,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" alt="Líbero Seguros">
+  <h1>Gerador de Assinatura de E-mail</h1>
+  <p>Preencha seus dados e copie para Gmail ou Outlook</p>
+</header>
+
+<div class="card">
+  <div class="grid">
+    <div>
+      <div class="section-label">Seus dados</div>
+      <div class="field">
+        <label>Foto de perfil <span style="color:#aab0c6;font-weight:400">(opcional)</span></label>
+        <div class="photo-row">
+          <div id="photo-thumb" onclick="document.getElementById('photo-input').click()">
+            <svg width="24" height="32" viewBox="0 0 24 32" fill="none" stroke="#c0c6d8" stroke-width="1.5">
+              <circle cx="12" cy="10" r="5"/><path d="M2 28c0-5 4.5-9 10-9s10 4 10 9"/>
+            </svg>
+          </div>
+          <div class="photo-btns">
+            <button class="btn-upload" onclick="document.getElementById('photo-input').click()">Escolher foto</button>
+            <button class="btn-remove" id="btn-remove" onclick="removePhoto()">Remover</button>
+            <span class="photo-hint">JPG ou PNG<br>Rosto centralizado</span>
+          </div>
+        </div>
+        <input type="file" id="photo-input" accept="image/*" style="display:none" onchange="handlePhoto(this)">
+      </div>
+      <div class="field">
+        <label>Nome completo</label>
+        <input type="text" id="inp-name" placeholder="Ex: João Silva" oninput="render()">
+      </div>
+      <div class="field">
+        <label>Cargo</label>
+        <input type="text" id="inp-role" placeholder="Ex: Consultor de Seguros" oninput="render()">
+      </div>
+      <div class="field">
+        <label>Telefone</label>
+        <input type="tel" id="inp-phone" placeholder="Ex: (11) 99999-0000" oninput="render()">
+      </div>
+      <div class="field">
+        <label>E-mail</label>
+        <input type="text" id="inp-email" placeholder="Ex: joao@liberoseguros.com.br" oninput="render()">
+      </div>
+    </div>
+
+    <div>
+      <div class="section-label">Preview</div>
+      <div class="preview-box">
+        <div id="sig-wrap"></div>
+      </div>
+      <div class="copy-buttons">
+        <button class="copy-btn gmail" id="btn-gmail" onclick="copyGmail()">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m2 7 10 7 10-7"/></svg>
+          Copiar p/ Gmail
+        </button>
+        <button class="copy-btn outlook" id="btn-outlook" onclick="copyOutlook()">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m2 7 10 7 10-7"/></svg>
+          Copiar p/ Outlook
+        </button>
+      </div>
+      <div class="hint">
+        <strong>Gmail:</strong> Configurações → Ver todas → Assinatura → ícone &lt;&gt; → cole o código<br>
+        <strong>Outlook:</strong> Configurações → Email → Assinaturas → Nova → <u>Ctrl+V no campo</u>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer>© Líbero Seguros — Uso interno</footer>
+<div id="sig-copy-target" style="position:fixed;left:-9999px;top:0;opacity:0;pointer-events:none;"></div>
+
+<script>
+const LOGO = "data:image/jpeg;base64,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";
+
+// Foto: resolução 2x para nitidez em telas retina e clientes de email
+// Dimensões visuais na assinatura: 120x190px
+// Canvas em 2x: 240x380 — exportado como JPEG alta qualidade
+const PHOTO_DISPLAY_W = 120;
+const PHOTO_DISPLAY_H = 190;
+const SCALE = 2;
+const PHOTO_CANVAS_W = PHOTO_DISPLAY_W * SCALE;
+const PHOTO_CANVAS_H = PHOTO_DISPLAY_H * SCALE;
+
+let photoDataURL = null;
+
+function handlePhoto(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const img = new Image();
+    img.onload = function() {
+      const canvas = document.createElement('canvas');
+      canvas.width = PHOTO_CANVAS_W;
+      canvas.height = PHOTO_CANVAS_H;
+      const ctx = canvas.getContext('2d');
+
+      // Cover crop — prioriza topo (rosto)
+      const srcRatio = img.width / img.height;
+      const dstRatio = PHOTO_CANVAS_W / PHOTO_CANVAS_H;
+      let sx, sy, sw, sh;
+      if (srcRatio > dstRatio) {
+        sh = img.height; sw = img.height * dstRatio;
+        sx = (img.width - sw) / 2; sy = 0;
+      } else {
+        sw = img.width; sh = img.width / dstRatio;
+        sx = 0; sy = 0;
+      }
+
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
+      ctx.drawImage(img, sx, sy, sw, sh, 0, 0, PHOTO_CANVAS_W, PHOTO_CANVAS_H);
+
+      // Alta qualidade: 0.95
+      photoDataURL = canvas.toDataURL('image/jpeg', 0.95);
+
+      const thumb = document.getElementById('photo-thumb');
+      thumb.innerHTML = '<img src="' + photoDataURL + '" style="width:100%;height:100%;object-fit:cover;display:block;">';
+      document.getElementById('btn-remove').classList.add('show');
+      render();
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function removePhoto() {
+  photoDataURL = null;
+  document.getElementById('photo-thumb').innerHTML = '<svg width="24" height="32" viewBox="0 0 24 32" fill="none" stroke="#c0c6d8" stroke-width="1.5"><circle cx="12" cy="10" r="5"/><path d="M2 28c0-5 4.5-9 10-9s10 4 10 9"/></svg>';
+  document.getElementById('btn-remove').classList.remove('show');
+  document.getElementById('photo-input').value = '';
+  render();
+}
+
+function buildSig(n, r, p, e) {
+  // Textos maiores e células mais largas para assinatura mais larga
+  if (photoDataURL) {
+    return `<table cellpadding="0" cellspacing="0" border="0" style="font-family:Arial,Helvetica,sans-serif;border-collapse:collapse;">
+<tr>
+  <td rowspan="2" style="padding:0;vertical-align:top;padding-right:16px;">
+    <img src="${photoDataURL}" width="${PHOTO_DISPLAY_W}" height="${PHOTO_DISPLAY_H}" style="display:block;width:${PHOTO_DISPLAY_W}px;height:${PHOTO_DISPLAY_H}px;border:none;">
+  </td>
+  <td rowspan="2" style="width:3px;padding:0;vertical-align:top;background:linear-gradient(to bottom,#0055ff,#00bcff);border-radius:2px;">&nbsp;</td>
+  <td style="width:18px;padding:0;">&nbsp;</td>
+  <td style="padding:0;vertical-align:top;padding-bottom:14px;min-width:260px;">
+    <p style="margin:0;font-size:17px;font-weight:700;color:#111111;line-height:1.3;">${n}</p>
+    <p style="margin:4px 0 0;font-size:13px;font-weight:500;color:#0055ff;">${r}</p>
+    <p style="margin:12px 0 0;font-size:12px;color:#555555;line-height:2.0;">
+      ${p}<br>
+      <a href="mailto:${e}" style="color:#0055ff;text-decoration:none;">${e}</a><br>
+      <a href="https://www.liberoseguros.com.br" style="color:#0055ff;text-decoration:none;">www.liberoseguros.com.br</a>
+    </p>
+  </td>
+</tr>
+<tr>
+  <td style="width:18px;padding:0;">&nbsp;</td>
+  <td style="padding:0;vertical-align:bottom;">
+    <img src="${LOGO}" alt="Líbero Seguros" height="38" style="display:block;border:none;">
+  </td>
+</tr>
+</table>`;
+  }
+
+  return `<table cellpadding="0" cellspacing="0" border="0" style="font-family:Arial,Helvetica,sans-serif;border-collapse:collapse;">
+<tr>
+  <td style="width:3px;padding:0;vertical-align:top;background:linear-gradient(to bottom,#0055ff,#00bcff);border-radius:2px;">&nbsp;</td>
+  <td style="width:18px;padding:0;">&nbsp;</td>
+  <td style="padding:0;vertical-align:top;min-width:280px;">
+    <p style="margin:0;font-size:17px;font-weight:700;color:#111111;line-height:1.3;">${n}</p>
+    <p style="margin:4px 0 0;font-size:13px;font-weight:500;color:#0055ff;">${r}</p>
+    <p style="margin:12px 0 0;font-size:12px;color:#555555;line-height:2.0;">
+      ${p}<br>
+      <a href="mailto:${e}" style="color:#0055ff;text-decoration:none;">${e}</a><br>
+      <a href="https://www.liberoseguros.com.br" style="color:#0055ff;text-decoration:none;">www.liberoseguros.com.br</a>
+    </p>
+    <p style="margin:16px 0 0;"><img src="${LOGO}" alt="Líbero Seguros" height="38" style="display:block;border:none;"></p>
+  </td>
+</tr>
+</table>`;
+}
+
+function render() {
+  const n = document.getElementById('inp-name').value.trim() || 'Seu Nome';
+  const r = document.getElementById('inp-role').value.trim() || 'Cargo';
+  const p = document.getElementById('inp-phone').value.trim() || '(11) 00000-0000';
+  const e = document.getElementById('inp-email').value.trim() || 'email@liberoseguros.com.br';
+  document.getElementById('sig-wrap').innerHTML = buildSig(n, r, p, e);
+}
+
+function getFields() {
+  return {
+    n: document.getElementById('inp-name').value.trim() || 'Seu Nome',
+    r: document.getElementById('inp-role').value.trim() || 'Cargo',
+    p: document.getElementById('inp-phone').value.trim() || '(11) 00000-0000',
+    e: document.getElementById('inp-email').value.trim() || 'email@liberoseguros.com.br'
+  };
+}
+
+function copyGmail() {
+  const {n,r,p,e} = getFields();
+  const html = buildSig(n,r,p,e);
+  navigator.clipboard.writeText(html).then(() => showCopied('btn-gmail')).catch(() => {
+    fallbackCopyText(html); showCopied('btn-gmail');
+  });
+}
+
+function copyOutlook() {
+  const {n,r,p,e} = getFields();
+  const html = buildSig(n,r,p,e);
+  const target = document.getElementById('sig-copy-target');
+  target.innerHTML = html;
+  target.style.cssText = 'position:fixed;left:0;top:0;opacity:1;pointer-events:auto;';
+  const range = document.createRange();
+  range.selectNodeContents(target);
+  const sel = window.getSelection();
+  sel.removeAllRanges(); sel.addRange(range);
+  try {
+    document.execCommand('copy');
+    showCopied('btn-outlook');
+  } catch(err) {
+    if (navigator.clipboard && navigator.clipboard.write) {
+      const blob = new Blob([html], {type: 'text/html'});
+      navigator.clipboard.write([new ClipboardItem({'text/html': blob})]).then(() => showCopied('btn-outlook'));
+    }
+  }
+  sel.removeAllRanges();
+  target.style.cssText = 'position:fixed;left:-9999px;top:0;opacity:0;pointer-events:none;';
+}
+
+function fallbackCopyText(text) {
+  const ta = document.createElement('textarea');
+  ta.value = text; ta.style.cssText = 'position:fixed;opacity:0;';
+  document.body.appendChild(ta); ta.focus(); ta.select();
+  document.execCommand('copy'); document.body.removeChild(ta);
+}
+
+function showCopied(btnId) {
+  const btn = document.getElementById(btnId);
+  const orig = btn.innerHTML;
+  btn.textContent = '✓ Copiado!';
+  btn.classList.add('success');
+  setTimeout(() => { btn.innerHTML = orig; btn.classList.remove('success'); }, 2500);
+}
+
+render();
+</script>
+</body>
+</html>
